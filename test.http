@@ -1,0 +1,27 @@
+GET http://localhost:9000/api/v1/todo/1
+
+################################
+GET http://localhost:9000/api/v1/todo
+
+
+################################
+POST http://localhost:9000/api/v1/todo
+
+{
+  "title": "test_go",
+	"status": "done"
+}
+################################
+
+
+PUT http://localhost:9000/api/v1/todo/3
+
+{
+  "title": "test_go1",
+	"status": "done"
+}
+
+################################
+
+
+DELETE  http://localhost:9000/api/v1/todo/0
