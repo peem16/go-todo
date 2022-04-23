@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"go-todo-service/errs"
 	"go-todo-service/router"
 	"go-todo-service/service"
@@ -49,11 +50,14 @@ func (t todoHandler) GetByID(c *router.Context) {
 
 func (t todoHandler) NewTodo(c *router.Context) {
 	input := service.TodoRequest{}
-
-	if err := c.ShouldBindJSON(&input); err == nil {
-		validate := validator.New()
-		if err := validate.Struct(&input); err != nil {
-			handleError(c, errs.NewValidationError(err.Error()))
+	if err := c.ShouldBind(&input); err != nil {
+		var ve validator.ValidationErrors
+		if errors.As(err, &ve) {
+			out := make([]ErrorMsg, len(ve))
+			for i, fe := range ve {
+				out[i] = ErrorMsg{fe.Field(), getErrorMsg(fe)}
+			}
+			ValidationErrors(c, out)
 			c.Abort()
 			return
 		}
@@ -72,10 +76,14 @@ func (t todoHandler) NewTodo(c *router.Context) {
 
 func (t todoHandler) UpdateByID(c *router.Context) {
 	input := service.TodoRequest{}
-	if err := c.ShouldBindJSON(&input); err == nil {
-		validate := validator.New()
-		if err := validate.Struct(&input); err != nil {
-			handleError(c, errs.NewValidationError(err.Error()))
+	if err := c.ShouldBind(&input); err != nil {
+		var ve validator.ValidationErrors
+		if errors.As(err, &ve) {
+			out := make([]ErrorMsg, len(ve))
+			for i, fe := range ve {
+				out[i] = ErrorMsg{fe.Field(), getErrorMsg(fe)}
+			}
+			ValidationErrors(c, out)
 			c.Abort()
 			return
 		}

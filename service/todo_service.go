@@ -80,7 +80,7 @@ func (t todoService) UpdateTodo(id int, reqTodo TodoRequest) error {
 
 	if err != nil {
 		logs.Error(err)
-		return errs.NewUnexpectedError()
+		return err
 	}
 
 	return nil
@@ -91,7 +91,7 @@ func (t todoService) DeleteTodo(id int) error {
 
 	if err != nil {
 		logs.Error(err)
-		return errs.NewUnexpectedError()
+		return err
 	}
 
 	return nil

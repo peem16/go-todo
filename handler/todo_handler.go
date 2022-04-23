@@ -1,8 +1,8 @@
 package handler
 
 type TodoRequest struct {
-	Title  string `json:"title"`
-	Status string `json:"status"`
+	Title  string `json:"title" form:"title" binding:"required"`
+	Status string `json:"status" form:"status" binding:"required,oneof=done none"`
 }
 
 type TodoResponse struct {

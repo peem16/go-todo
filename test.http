@@ -5,23 +5,21 @@ GET http://localhost:9000/api/v1/todo
 
 
 ################################
-POST http://localhost:9000/api/v1/todo
+POST http://localhost:9000/api/v1/todo HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
 
-{
-  "title": "test_go",
-	"status": "done"
-}
-################################
-
-
-PUT http://localhost:9000/api/v1/todo/3
-
-{
-  "title": "test_go1",
-	"status": "done"
-}
+title=test_go
+&status=done
 
 ################################
 
 
-DELETE  http://localhost:9000/api/v1/todo/0
+PUT http://localhost:9000/api/v1/todo/1 HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+title=test_go2
+&status=done
+
+################################
+
+DELETE  http://localhost:9000/api/v1/todo/3

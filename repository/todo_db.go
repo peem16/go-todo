@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"go-todo-service/errs"
 	"os"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -75,7 +76,7 @@ func (s *TodoRepositoryDB) GetAll() ([]Todo, error) {
 
 func (s *TodoRepositoryDB) GetByID(id int) (*Todo, error) {
 	todo := &Todo{}
-	filter := bson.D{{"todoid", 1}}
+	filter := bson.D{{"todoid", id}}
 	err := s.Collection.FindOne(context.Background(), filter).Decode(todo)
 	if err != nil {
 		return nil, err
@@ -88,9 +89,12 @@ func (s *TodoRepositoryDB) UpdateByID(id int, todo Todo) error {
 	update := bson.M{
 		"$set": bson.M{"title": todo.Title, "status": todo.Status},
 	}
-	filter := bson.D{{Key: "todoID", Value: id}}
+	filter := bson.D{{"todoid", id}}
 
-	_, err := s.Collection.UpdateOne(context.Background(), filter, update, nil)
+	updateResult, err := s.Collection.UpdateOne(context.Background(), filter, update, nil)
+	if updateResult.MatchedCount == 0 {
+		return errs.NewNotFoundError()
+	}
 	if err != nil {
 		return err
 	}
@@ -99,9 +103,12 @@ func (s *TodoRepositoryDB) UpdateByID(id int, todo Todo) error {
 
 func (s *TodoRepositoryDB) Delete(id int) error {
 
-	filter := bson.D{{Key: "todoID", Value: id}}
+	filter := bson.D{{"todoid", id}}
 
-	_, err := s.Collection.DeleteOne(context.Background(), filter, nil)
+	deleteResult, err := s.Collection.DeleteOne(context.Background(), filter, nil)
+	if deleteResult.DeletedCount == 0 {
+		return errs.NewNotFoundError()
+	}
 	if err != nil {
 		return err
 	}
