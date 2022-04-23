@@ -2,9 +2,12 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type TodoRepositoryDB struct {
@@ -13,12 +16,36 @@ type TodoRepositoryDB struct {
 
 func NewRepositoryDB(db *mongo.Database) TodoRepository {
 	collection := db.Collection("todos")
+	mod := mongo.IndexModel{
+		Keys: bson.M{
+			"todoid": 1, // index in ascending order
+		}, Options: options.Index().SetUnique(true),
+	}
+	ind, err := collection.Indexes().CreateOne(context.Background(), mod)
+
+	// Check if the CreateOne() method returned any errors
+	if err != nil {
+		fmt.Println("Indexes().CreateOne() ERROR:", err)
+		os.Exit(1) // exit in case of error
+	} else {
+		// API call returns string of the index name
+		fmt.Println("CreateOne() index:", ind)
+	}
 
 	return &TodoRepositoryDB{Collection: collection}
 }
 
-func (s *TodoRepositoryDB) Create(t Todo) error {
-	_, err := s.Collection.InsertOne(context.Background(), t)
+func (repo *TodoRepositoryDB) Count() (int64, error) {
+	count, err := repo.Collection.CountDocuments(context.Background(), bson.D{})
+	if err != nil {
+		return 0, err
+	}
+
+	return count, err
+}
+
+func (repo *TodoRepositoryDB) Create(t Todo) error {
+	_, err := repo.Collection.InsertOne(context.Background(), t)
 	return err
 }
 

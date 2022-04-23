@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"go-todo-service/errs"
 	"go-todo-service/router"
 	"go-todo-service/service"
 	"net/http"
 	"strconv"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type todoHandler struct {
@@ -18,9 +21,7 @@ func NewTodoHandler(todoSrv service.TodoService) todoHandler {
 func (t todoHandler) GetAll(c *router.Context) {
 	todoList, err := t.todoSrv.GetTodos()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
+		handleError(c, errs.NewBadRequest(err.Error()))
 		return
 	}
 
@@ -33,17 +34,13 @@ func (t todoHandler) GetByID(c *router.Context) {
 
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"error": err.Error(),
-		})
+		handleError(c, err)
 		return
 	}
 
 	todo, err := t.todoSrv.GetTodo(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
+		handleError(c, errs.NewBadRequest(err.Error()))
 		return
 	}
 
@@ -52,18 +49,19 @@ func (t todoHandler) GetByID(c *router.Context) {
 
 func (t todoHandler) NewTodo(c *router.Context) {
 	input := service.TodoRequest{}
-	err := c.ShouldBindJSON(&input)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
-		return
+
+	if err := c.ShouldBindJSON(&input); err == nil {
+		validate := validator.New()
+		if err := validate.Struct(&input); err != nil {
+			handleError(c, errs.NewValidationError(err.Error()))
+			c.Abort()
+			return
+		}
 	}
-	_, err = t.todoSrv.NewTodo(input)
+
+	_, err := t.todoSrv.NewTodo(input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": err.Error(),
-		})
+		handleError(c, err)
 		return
 	}
 
@@ -74,29 +72,26 @@ func (t todoHandler) NewTodo(c *router.Context) {
 
 func (t todoHandler) UpdateByID(c *router.Context) {
 	input := service.TodoRequest{}
-	err := c.ShouldBindJSON(&input)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
-		return
+	if err := c.ShouldBindJSON(&input); err == nil {
+		validate := validator.New()
+		if err := validate.Struct(&input); err != nil {
+			handleError(c, errs.NewValidationError(err.Error()))
+			c.Abort()
+			return
+		}
 	}
 
 	idParam := c.Param("id")
 
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"error": err.Error(),
-		})
+		handleError(c, err)
 		return
 	}
 
 	err = t.todoSrv.UpdateTodo(id, input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": err.Error(),
-		})
+		handleError(c, err)
 		return
 	}
 
@@ -109,17 +104,13 @@ func (t todoHandler) Delete(c *router.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"error": err.Error(),
-		})
+		handleError(c, err)
 		return
 	}
 
 	err = t.todoSrv.DeleteTodo(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": err.Error(),
-		})
+		handleError(c, err)
 		return
 	}
 

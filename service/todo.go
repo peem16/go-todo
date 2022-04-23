@@ -3,7 +3,7 @@ package service
 import "time"
 
 type TodoRequest struct {
-	Title  string `json:"title"`
+	Title  string `json:"title" validate:"required"`
 	Status string `json:"status"`
 }
 

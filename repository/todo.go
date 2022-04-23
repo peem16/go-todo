@@ -3,7 +3,7 @@ package repository
 import "time"
 
 type Todo struct {
-	TodoID    int    `db:"todoid"`
+	TodoID    int64  `db:"todoid" `
 	Title     string `db:"title"`
 	Status    string `db:"status"`
 	CreatedAt time.Time
@@ -16,4 +16,5 @@ type TodoRepository interface {
 	GetByID(int) (*Todo, error)
 	UpdateByID(int, Todo) error
 	Delete(int) error
+	Count() (int64, error)
 }
